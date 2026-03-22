@@ -1,0 +1,151 @@
+name: 🔭 CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+      - '!no-qa/*'
+  pull_request:
+    branches:
+      - main
+      - dev
+      - '!no-qa/*'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Shared setup for all jobs
+  setup:
+    uses: ./.github/workflows/setup.yml
+
+  generate-branch-name:
+    needs: [setup]
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/generate-branch-name.yml
+
+  # Quality checks (lint + auto-format) — single job instead of two
+  quality:
+    needs: [setup]
+    uses: ./.github/workflows/quality.yml
+    with:
+      deps-cache-key: ${{ needs.setup.outputs.deps-cache-key }}
+
+  # Neon database branching for PRs
+  create-feature-db:
+    needs: [setup, generate-branch-name]
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/create-feature-db.yml
+    with:
+      branch_name: ${{ needs.generate-branch-name.outputs.branch_name }}
+    secrets:
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+  # Build and test — run immediately after setup (don't wait for feature DB)
+  build:
+    needs: [setup]
+    uses: ./.github/workflows/build.yml
+    with:
+      deps-cache-key: ${{ needs.setup.outputs.deps-cache-key }}
+    secrets:
+      DATABASE_URL: ${{
+        (github.ref == 'refs/heads/dev' && secrets.DATABASE_URL_STAGE) ||
+        secrets.DATABASE_URL_PROD }}
+      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+
+  unit-test:
+    needs: [setup]
+    uses: ./.github/workflows/unit-test.yml
+    with:
+      deps-cache-key: ${{ needs.setup.outputs.deps-cache-key }}
+    secrets:
+      DATABASE_URL: ${{
+        (github.ref == 'refs/heads/dev' && secrets.DATABASE_URL_STAGE) ||
+        secrets.DATABASE_URL_PROD }}
+      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+
+  # Database migration & schema sync - before deployment
+  migrate:
+    uses: ./.github/workflows/migrate.yml
+    needs: [setup, quality, build, unit-test, create-feature-db]
+    if: always() && !cancelled() && !failure() && needs.setup.result == 'success' && needs.quality.result == 'success' && needs.build.result == 'success' && needs.unit-test.result == 'success'
+    with:
+      deps-cache-key: ${{ needs.setup.outputs.deps-cache-key }}
+      database_url_b64: ${{ needs.create-feature-db.outputs.db_url_with_pooler_b64 }}
+    secrets:
+      DATABASE_URL: ${{
+        (github.ref == 'refs/heads/dev' && secrets.DATABASE_URL_STAGE) ||
+        secrets.DATABASE_URL_PROD }}
+
+  # Deployment - after migration & sync and all checks pass
+  deploy:
+    uses: ./.github/workflows/deploy.yml
+    needs: [quality, build, unit-test, migrate, create-feature-db, generate-branch-name]
+    if: always() && !cancelled() && !failure() && needs.quality.result == 'success' && needs.build.result == 'success' && needs.unit-test.result == 'success' && needs.migrate.result == 'success'
+    with:
+      environment: ${{
+        github.event_name == 'pull_request' && 'dev' ||
+        github.ref == 'refs/heads/dev' && 'stage' ||
+        github.ref == 'refs/heads/main' && 'prod' }}
+      build-artifact-name: ${{ needs.build.outputs.build-artifact-name }}
+      branch-name: ${{
+        github.event_name == 'pull_request' && needs.generate-branch-name.outputs.branch_name ||
+        github.ref == 'refs/heads/dev' && 'stage' ||
+        github.ref == 'refs/heads/main' && 'prod' ||
+        'dev' }}
+      domain-suffix: ${{ vars.CLOUDFLARE_APP_DOMAIN }}
+      stage-origin: ${{ vars.ALLOWED_ORIGINS_STAGE }}
+      prod-origin: ${{ vars.ALLOWED_ORIGINS_PROD }}
+      hyperdrive-id: ${{
+        (github.event_name == 'pull_request' && needs.create-feature-db.outputs.hyperdrive_id) ||
+        (github.ref == 'refs/heads/dev' && vars.HYPERDRIVE_ID_STAGE) ||
+        vars.HYPERDRIVE_ID_PROD }}
+      database_url_b64: ${{ needs.create-feature-db.outputs.db_url_with_pooler_b64 }}
+    secrets:
+      DATABASE_URL: ${{
+        (github.ref == 'refs/heads/dev' && secrets.DATABASE_URL_STAGE) ||
+        secrets.DATABASE_URL_PROD }}
+      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+
+  # E2E tests - only after successful deployment (Chromium only; Firefox runs weekly)
+  e2e:
+    uses: ./.github/workflows/e2e.yml
+    needs: [deploy, setup, create-feature-db]
+    if: always() && !cancelled() && !failure() && needs.deploy.result == 'success' && needs.setup.result == 'success'
+    with:
+      base_url: ${{ needs.deploy.outputs.deployment-url }}
+      deps-cache-key: ${{ needs.setup.outputs.deps-cache-key }}
+      browsers: chromium
+      database_url_b64: ${{ needs.create-feature-db.outputs.db_url_with_pooler_b64 }}
+    secrets:
+      DATABASE_URL: ${{
+        (github.ref == 'refs/heads/dev' && secrets.DATABASE_URL_STAGE) ||
+        secrets.DATABASE_URL_PROD }}
+      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+
+  # Security scan - post-merge only (not on PRs to save CI costs)
+  security:
+    needs: [setup]
+    if: github.event_name == 'push'
+    uses: ./.github/workflows/security.yml
+    secrets:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+  # Performance monitoring - after successful deployment
+  performance:
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')
+    uses: ./.github/workflows/performance.yml
+    needs: [deploy]
+    with:
+      monitor-enabled: true

@@ -1,0 +1,111 @@
+name: 🧹 Cleanup Feature Environment
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  generate-branch-name:
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/generate-branch-name.yml
+  cleanup:
+    name: 🧹 Cleanup PR-${{ github.event.number }}
+    runs-on: ubuntu-latest
+    needs: [generate-branch-name]
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v5
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4.2.0
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: 📥 Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: 🧹 Delete feature environment
+        uses: cloudflare/wrangler-action@v3
+        with:
+          command: delete --name foundation-${{ needs.generate-branch-name.outputs.branch_name }} --force
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          packageManager: pnpm
+        continue-on-error: true
+
+      - name: 🔗 Delete Hyperdrive config
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          BRANCH_NAME: ${{ needs.generate-branch-name.outputs.branch_name }}
+        run: |
+          set -euo pipefail
+
+          HD_NAME="foundation-pr-${BRANCH_NAME}"
+
+          # Get account ID from API
+          ACCOUNT_ID=$(curl -sf \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts?per_page=1" \
+            | jq -r '.result[0].id')
+
+          # Find the Hyperdrive config by name
+          HYPERDRIVE_ID=$(curl -sf \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/hyperdrive/configs" \
+            | jq -r --arg name "$HD_NAME" '.result[] | select(.name == $name) | .id' || true)
+
+          if [[ -n "$HYPERDRIVE_ID" ]]; then
+            echo "Deleting Hyperdrive config '$HD_NAME' ($HYPERDRIVE_ID)..."
+            pnpm exec wrangler hyperdrive delete "$HYPERDRIVE_ID"
+            echo "Deleted Hyperdrive config $HYPERDRIVE_ID"
+          else
+            echo "No Hyperdrive config found for $HD_NAME"
+          fi
+        continue-on-error: true
+
+      - name: 📝 Comment PR about cleanup
+        uses: actions/github-script@v8
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🧹 **Feature environment cleaned up!**\n\nThe preview environment for this PR has been automatically removed.`
+            });
+
+  delete_neon_branch:
+    name: 🧹 Delete Neon Database Branch
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    needs: [generate-branch-name]
+    steps:
+
+      - name: 🧹 Delete Neon Branch
+        uses: neondatabase/delete-branch-action@v3
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch: feat/pr-${{ needs.generate-branch-name.outputs.branch_name }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+
+      - name: 📝 Comment PR about database cleanup
+        uses: actions/github-script@v8
+        env:
+          BRANCH_NAME: ${{ needs.generate-branch-name.outputs.branch_name }}
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🧹 **Neon Database Branch Cleaned Up!**
+
+              The temporary database branch for this PR has been automatically removed.
+
+              - **Branch Name**: \`feat/pr-${process.env.BRANCH_NAME}\`
+              - **Status**: ✅ Cleaned up successfully`
+            });
+            

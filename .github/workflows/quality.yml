@@ -1,0 +1,93 @@
+name: ✅ Quality
+
+on:
+  workflow_call:
+    inputs:
+      deps-cache-key:
+        description: 'Cache key for dependencies'
+        type: string
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  quality:
+    name: ✅ Lint & Format
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.head_ref || github.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4.2.0
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: 📥 Restore dependencies cache
+        if: inputs.deps-cache-key
+        id: cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: ${{ inputs.deps-cache-key }}
+          restore-keys: |
+            deps-${{ hashFiles('pnpm-lock.yaml') }}-
+
+      - name: 📥 Install deps
+        if: inputs.deps-cache-key == '' || steps.cache.outputs.cache-hit != 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔬 Lint
+        run: pnpm lint
+
+      - name: 🔍 Check if last commit was auto-format
+        id: check-last-commit
+        run: |
+          LAST_COMMIT_MSG=$(git log -1 --pretty=%B)
+          if [[ "$LAST_COMMIT_MSG" == "chore: format" ]]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "⏭️  Last commit was auto-format, skipping to prevent infinite loop"
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 👔 Format
+        if: steps.check-last-commit.outputs.skip != 'true'
+        run: pnpm lint:fix
+
+      - name: 💪 Commit
+        if: steps.check-last-commit.outputs.skip != 'true'
+        run: |
+          git config --local user.email "mason.smith@solutionops.com"
+          git config --local user.name "Mason Smith"
+
+          git add .
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "💿 no formatting changed"
+            exit 0
+          fi
+
+          git commit -m "chore: format"
+
+          # Push to the correct branch
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git push origin HEAD:${{ github.head_ref }}
+            echo "💿 pushed formatting changes to PR branch ${{ github.head_ref }}"
+          else
+            git push
+            echo "💿 pushed formatting changes to ${{ github.ref_name }}"
+          fi
+
+          echo "💿 commit: https://github.com/$GITHUB_REPOSITORY/commit/$(git rev-parse HEAD)"

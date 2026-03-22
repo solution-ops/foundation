@@ -1,0 +1,39 @@
+{
+  "name": "@foundation/api",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "dev": "CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE=$(grep '^DATABASE_URL=' ../../.dev.vars | cut -d'=' -f2- | tr -d '\"') wrangler dev --port 8081 --config ../../wrangler.jsonc",
+    "test": "vitest run",
+    "test:watch": "vitest watch"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250214.0",
+    "@electric-sql/pglite": "^0.2.17",
+    "@foundation/constants": "workspace:^",
+    "@foundation/types": "workspace:^",
+    "@types/pg": "^8.15.4",
+    "drizzle-kit": "^0.31.9",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  },
+  "dependencies": {
+    "@hono/swagger-ui": "^0.5.3",
+    "@hono/zod-openapi": "^1.2.2",
+    "@paralleldrive/cuid2": "^3.3.0",
+    "@foundation/db": "workspace:^",
+    "@foundation/env": "workspace:^",
+    "better-auth": "^1.4.18",
+    "drizzle-orm": "^0.45.1",
+    "hono": "^4.7.10",
+    "pg": "^8.16.0",
+    "zod": "^4.3.6"
+  }
+}

@@ -1,0 +1,140 @@
+name: 🗃️ Neon Database Branch Management
+
+on:
+  workflow_call:
+    secrets:
+      NEON_API_KEY:
+        required: true
+      CLOUDFLARE_API_TOKEN:
+        required: true
+    inputs:
+      branch_name:
+        description: 'Name of the branch'
+        required: true
+        type: string
+    outputs:
+      db_url_b64:
+        description: 'Base64-encoded database URL (encoded to bypass GitHub secret detection on job outputs)'
+        value: ${{ jobs.create_neon_branch.outputs.db_url_b64 }}
+      db_url_with_pooler_b64:
+        description: 'Base64-encoded pooled database URL (encoded to bypass GitHub secret detection on job outputs)'
+        value: ${{ jobs.create_neon_branch.outputs.db_url_pooled_b64 }}
+      hyperdrive_id:
+        description: 'Hyperdrive config ID for the created branch'
+        value: ${{ jobs.create_neon_branch.outputs.hyperdrive_id }}
+
+concurrency:
+  group: neon-db-branch-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  create_neon_branch:
+    name: 🌿 Create Neon Database Branch
+    outputs:
+      db_url_b64: ${{ steps.encode_urls.outputs.db_url_b64 }}
+      db_url_pooled_b64: ${{ steps.encode_urls.outputs.db_url_pooled_b64 }}
+      hyperdrive_id: ${{ steps.create_hyperdrive.outputs.hyperdrive_id }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v5
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4.2.0
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: 📥 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🌿 Create Neon Branch
+        id: create_neon_branch
+        uses: neondatabase/create-branch-action@v6
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch_name: feat/pr-${{ inputs.branch_name }}
+          database: ${{ vars.NEON_DATABASE_NAME }}
+          role: ${{ vars.NEON_ROLE_NAME }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+
+      - name: 🔐 Encode database URLs
+        id: encode_urls
+        env:
+          DB_URL: ${{ steps.create_neon_branch.outputs.db_url }}
+          DB_URL_POOLED: ${{ steps.create_neon_branch.outputs.db_url_pooled }}
+        run: |
+          # Base64-encode the URLs so GitHub's secret detection doesn't
+          # suppress them as job outputs (the Neon action registers them
+          # as secrets via core.setSecret, which poisons all outputs).
+          echo "db_url_b64=$(echo -n "$DB_URL" | base64 -w0)" >> "$GITHUB_OUTPUT"
+          echo "db_url_pooled_b64=$(echo -n "$DB_URL_POOLED" | base64 -w0)" >> "$GITHUB_OUTPUT"
+
+      - name: 🔗 Create Hyperdrive config
+        id: create_hyperdrive
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CONNECTION_STRING: ${{ steps.create_neon_branch.outputs.db_url_pooled }}
+          BRANCH_NAME: ${{ inputs.branch_name }}
+        run: |
+          set -euo pipefail
+
+          HD_NAME="foundation-pr-${BRANCH_NAME}"
+
+          # Get account ID from API
+          ACCOUNT_ID=$(curl -sf \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts?per_page=1" \
+            | jq -r '.result[0].id')
+
+          # Check if config already exists (CI re-runs)
+          EXISTING_ID=$(curl -sf \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/hyperdrive/configs" \
+            | jq -r --arg name "$HD_NAME" '.result[] | select(.name == $name) | .id' || true)
+
+          if [[ -n "$EXISTING_ID" ]]; then
+            echo "Hyperdrive config '$HD_NAME' already exists ($EXISTING_ID), deleting first..."
+            pnpm exec wrangler hyperdrive delete "$EXISTING_ID"
+          fi
+
+          echo "Creating Hyperdrive config: $HD_NAME"
+          CREATE_OUTPUT=$(pnpm exec wrangler hyperdrive create "$HD_NAME" \
+            --connection-string="$CONNECTION_STRING" \
+            --caching-disabled 2>&1)
+          echo "$CREATE_OUTPUT"
+
+          # Extract ID from structured JSON field to avoid matching account IDs
+          HYPERDRIVE_ID=$(echo "$CREATE_OUTPUT" | grep -oP '"id":\s*"\K[0-9a-f]{32}')
+
+          if [[ -z "$HYPERDRIVE_ID" ]]; then
+            echo "::error::wrangler create succeeded but could not parse Hyperdrive ID from output"
+            exit 1
+          fi
+
+          echo "Created Hyperdrive config: $HYPERDRIVE_ID"
+          echo "hyperdrive_id=$HYPERDRIVE_ID" >> "$GITHUB_OUTPUT"
+
+      - name: 📝 Comment PR with database branch info
+        uses: actions/github-script@v8
+        env:
+          BRANCH_NAME: ${{ inputs.branch_name }}
+        with:
+          script: |
+            const branchName = `feat/pr-${process.env.BRANCH_NAME}`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🗃️ **Neon Database Branch Created!**
+
+              A temporary database branch has been created for this PR:
+              - **Branch Name**: \`${branchName}\`
+              - **Status**: ✅ Ready for testing
+              - **Migrations**: ✅ Inherited from parent — \`drizzle-kit migrate\` will apply new migrations only
+
+              The database branch will be automatically cleaned up when this PR is closed.`
+            });

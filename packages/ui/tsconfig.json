@@ -1,0 +1,12 @@
+{
+  "extends": "@foundation/tsconfig/react-library.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "types": ["@testing-library/jest-dom"],
+    "paths": {
+      "@foundation/ui/*": ["./src/*"]
+    }
+  },
+  "include": ["."],
+  "exclude": ["node_modules", "dist"]
+}

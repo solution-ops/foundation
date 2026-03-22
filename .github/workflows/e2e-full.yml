@@ -1,0 +1,22 @@
+name: 🎭 E2E Full Browser Suite
+
+on:
+  schedule:
+    - cron: '0 6 * * 1' # Every Monday at 06:00 UTC
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  setup:
+    uses: ./.github/workflows/setup.yml
+
+  e2e:
+    uses: ./.github/workflows/e2e.yml
+    needs: [setup]
+    with:
+      base_url: ${{ vars.STAGE_URL }}
+      deps-cache-key: ${{ needs.setup.outputs.deps-cache-key }}
+      browsers: chromium firefox
+    secrets:
+      DATABASE_URL: ${{ secrets.DATABASE_URL_STAGE }}
+      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}

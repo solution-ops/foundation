@@ -1,0 +1,81 @@
+name: 🚀 Release
+
+on:
+  workflow_run:
+    workflows: ["🔭 CI Pipeline"]
+    types: [completed]
+    branches: [dev]
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: 🚀 Release
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: 🔍 Check for changesets
+        id: check
+        run: |
+          if ls .changeset/*.md 1>/dev/null 2>&1 && [ "$(ls .changeset/*.md 2>/dev/null | grep -v README.md)" ]; then
+            echo "has_changesets=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changesets=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 📦 Setup pnpm
+        if: steps.check.outputs.has_changesets == 'true'
+        uses: pnpm/action-setup@v4.2.0
+
+      - name: ⎔ Setup node
+        if: steps.check.outputs.has_changesets == 'true'
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: 📥 Install dependencies
+        if: steps.check.outputs.has_changesets == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: 🦋 Version packages
+        if: steps.check.outputs.has_changesets == 'true'
+        run: pnpm version-packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📝 Get new version
+        if: steps.check.outputs.has_changesets == 'true'
+        id: version
+        run: |
+          VERSION=$(node -p "require('./packages/constants/package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: 💾 Commit and tag
+        if: steps.check.outputs.has_changesets == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore: release v${{ steps.version.outputs.version }}"
+          git tag ${{ steps.version.outputs.tag }}
+          git push origin dev --follow-tags
+
+      - name: 🚀 Create GitHub Release
+        if: steps.check.outputs.has_changesets == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create ${{ steps.version.outputs.tag }} \
+            --title "${{ steps.version.outputs.tag }}" \
+            --generate-notes \
+            --target dev

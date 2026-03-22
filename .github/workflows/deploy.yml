@@ -1,0 +1,191 @@
+name: 🚀 Deploy Feature
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Environment to deploy to: <dev|stage|prod>'
+        required: true
+        default: 'prod'
+        type: string
+      build-artifact-name:
+        description: 'Name of the build artifact to deploy'
+        required: true
+        type: string
+      branch-name:
+        description: 'Name of the branch to deploy'
+        required: true
+        type: string
+      domain-suffix:
+        description: 'Public domain suffix used for deployment URLs (for example: workers.dev)'
+        required: true
+        type: string
+      stage-origin:
+        description: 'Exact allowed origin URL for staging deployments'
+        required: true
+        type: string
+      prod-origin:
+        description: 'Exact allowed origin URL for production deployments'
+        required: true
+        type: string
+      hyperdrive-id:
+        description: 'Cloudflare Hyperdrive config ID for this deployment'
+        required: true
+        type: string
+      database_url_b64:
+        description: 'Base64-encoded DATABASE_URL (for PR feature branches — bypasses GitHub secret suppression)'
+        type: string
+        required: false
+    outputs:
+      deployment-url:
+        description: 'URL of the deployed application'
+        value: ${{ jobs.deploy.outputs.deployment-url }}
+    secrets:
+      DATABASE_URL:
+        required: false
+      AUTH_SECRET:
+        required: true
+      CLOUDFLARE_API_TOKEN:
+        required: true
+      GOOGLE_CLIENT_ID:
+        required: true
+      GOOGLE_CLIENT_SECRET:
+        required: true
+
+concurrency:
+  group: deploy-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: 🚀 Deploy ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    outputs:
+      deployment-url: ${{ steps.deploy.outputs.deployment-url }}
+
+    steps:
+      - name: 🔓 Resolve DATABASE_URL
+        env:
+          DATABASE_URL_B64: ${{ inputs.database_url_b64 }}
+          DATABASE_URL_SECRET: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [[ -n "$DATABASE_URL_B64" ]]; then
+            echo "DATABASE_URL=$(printf '%s' "$DATABASE_URL_B64" | base64 -d)" >> "$GITHUB_ENV"
+          else
+            echo "DATABASE_URL=$DATABASE_URL_SECRET" >> "$GITHUB_ENV"
+          fi
+
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v5
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4.2.0
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: 📥 Download build artifacts
+        uses: actions/download-artifact@v5
+        with:
+          name: ${{ inputs.build-artifact-name }}
+          path: apps/web/dist
+
+      - name: 📥 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Wrangler
+        run: pnpm add wrangler@latest --global
+
+      - name: 🌐 Compute ALLOWED_ORIGINS
+        env:
+          BRANCH_NAME: ${{ inputs.branch-name }}
+          DOMAIN_SUFFIX: ${{ inputs.domain-suffix }}
+          STAGE_ORIGIN: ${{ inputs.stage-origin }}
+          PROD_ORIGIN: ${{ inputs.prod-origin }}
+          ENVIRONMENT: ${{ inputs.environment }}
+        run: |
+          case "$ENVIRONMENT" in
+            stage)
+              if [[ -z "$STAGE_ORIGIN" ]]; then
+                echo "stage-origin input is empty. Set repository variable ALLOWED_ORIGINS_STAGE."
+                exit 1
+              fi
+              ALLOWED_ORIGINS="$STAGE_ORIGIN"
+              ;;
+            prod)
+              if [[ -z "$PROD_ORIGIN" ]]; then
+                echo "prod-origin input is empty. Set repository variable ALLOWED_ORIGINS_PROD."
+                exit 1
+              fi
+              ALLOWED_ORIGINS="$PROD_ORIGIN"
+              ;;
+            *)
+              if [[ -z "$DOMAIN_SUFFIX" ]]; then
+                echo "domain-suffix input is empty. Set repository variable CLOUDFLARE_APP_DOMAIN."
+                exit 1
+              fi
+              ALLOWED_ORIGINS="https://foundation-${BRANCH_NAME}.${DOMAIN_SUFFIX}"
+              ;;
+          esac
+
+          echo "ALLOWED_ORIGINS=$ALLOWED_ORIGINS" >> "$GITHUB_ENV"
+
+      - name: 🔗 Configure wrangler.jsonc for deployment
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          HYPERDRIVE_ID: ${{ inputs.hyperdrive-id }}
+          WORKER_NAME: foundation-${{ inputs.branch-name }}
+        run: |
+          # Set the Worker name so wrangler secret bulk targets the correct Worker
+          sed -i "s/\"name\": \"foundation\"/\"name\": \"$WORKER_NAME\"/" wrangler.jsonc
+
+          # Swap the Hyperdrive config ID for this deployment
+          sed -i "s/HYPERDRIVE_ID_PLACEHOLDER/$HYPERDRIVE_ID/" wrangler.jsonc
+
+          # Update the Hyperdrive config to point at this environment's database.
+          # Query caching is disabled — React Query handles client-side caching.
+          # Hyperdrive still provides connection pooling and reduced latency.
+          pnpm exec wrangler hyperdrive update "$HYPERDRIVE_ID" \
+            --connection-string="$DATABASE_URL" \
+            --caching-disabled
+
+      - name: 🚀 Deploy to Cloudflare
+        id: deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          command: deploy
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          packageManager: pnpm
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          secrets: |
+            DATABASE_URL
+            AUTH_SECRET
+            GOOGLE_CLIENT_ID
+            GOOGLE_CLIENT_SECRET
+            ALLOWED_ORIGINS
+        env:
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          ALLOWED_ORIGINS: ${{ env.ALLOWED_ORIGINS }}
+
+      - name: 📝 Save deployment metadata
+        run: |
+          DEPLOYMENT_URL="${{ steps.deploy.outputs.deployment-url }}"
+
+          echo "DEPLOYMENT_URL=$DEPLOYMENT_URL" >> $GITHUB_ENV
+
+      - name: Leave a comment with deployment info
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `Deployment URL: ${{ steps.deploy.outputs.deployment-url }}`
+            })

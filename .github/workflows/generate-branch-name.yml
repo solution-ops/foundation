@@ -1,0 +1,26 @@
+name: 🪾 Generate Branch Name
+
+on:
+  workflow_call:
+    outputs:
+      branch_name:
+        description: 'Name of the branch'
+        value: ${{ jobs.generate_branch_name.outputs.branch_name }}
+
+jobs:
+  generate_branch_name:
+    runs-on: ubuntu-latest
+    outputs:
+      branch_name: ${{ steps.generate_branch_name.outputs.name }}
+    steps:
+      - name: 🪾 Generate Branch Name
+        id: generate_branch_name
+        run: |
+          # Validate input first
+          if [[ -z "${{ github.head_ref }}" ]]; then
+            echo "Error: head_ref is empty"
+            exit 1
+          fi
+          CLEAN_BRANCH=$(echo "${{ github.head_ref }}" | sed 's/[^a-zA-Z0-9]/-/g' | sed 's/-\+/-/g' | sed 's/^-\|-$//g' | tr '[:upper:]' '[:lower:]')
+          echo "name=$CLEAN_BRANCH" >> $GITHUB_OUTPUT
+          

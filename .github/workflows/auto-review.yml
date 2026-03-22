@@ -1,0 +1,68 @@
+name: 🤖 Auto Review PRs
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+      
+jobs:
+  code-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Code Review with Claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            Review this pull request. Read CLAUDE.md first for project conventions.
+
+            Comment on these categories:
+
+            **Critical (must fix)**:
+            - Security vulnerabilities (missing auth, secret leaks, injection)
+            - Bugs that will cause runtime failures
+            - Data loss or corruption risks
+
+            **Architecture (must fix)**:
+            - Route handlers not following the directory pattern (routes.ts/handlers.ts/index.ts)
+            - Inline defaultHook instead of shared validationHook
+            - Inline query key arrays instead of using api/query-keys.ts factory
+            - Error responses not using the shared apiErrorResponseSchema from @foundation/types
+            - Schemas defined in API instead of @foundation/types/schemas/
+            - Barrel file exports (index.ts re-exports)
+            - Handlers returning error JSON directly instead of throwing via createApiError
+            - Services not taking db as first parameter
+            - Using string() where email() or iso.datetime() should be used in Zod schemas
+            - Boolean fields that should be nullable timestamps for auditing
+            - Columns using createdAt/updatedAt on owned tables (should be dateCreated/dateUpdated)
+
+            Do NOT comment on:
+            - Code style, naming, or formatting (Biome handles this)
+            - Suggestions for future improvements unrelated to the PR scope
+            - Edge cases that require misconfiguration to trigger
+
+            Be concise. If there are no issues, leave a single approving comment.
+
+            Note: The PR branch is already checked out in the current working directory.
+
+            Use `gh pr comment` for top-level feedback.
+            Use `mcp__github_inline_comment__create_inline_comment` to highlight specific code issues.
+            Only post GitHub comments - don't submit review text as messages.
+
+          claude_args: |
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"

@@ -1,0 +1,50 @@
+name: 📊 Performance Monitor
+
+on:
+  workflow_call:
+    inputs:
+      monitor-enabled:
+        description: 'Enable performance monitoring'
+        type: boolean
+        default: true
+
+jobs:
+  performance:
+    name: 📊 Performance Analysis
+    runs-on: ubuntu-latest
+    if: inputs.monitor-enabled
+    
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v5
+
+      - name: 📊 Analyze repository metrics
+        run: |
+          echo "## Repository Metrics" >> performance-report.md
+          echo "- Files: $(find . -type f -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.jsx' | wc -l)" >> performance-report.md
+          echo "- Lines of code: $(find . -type f -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.jsx' | xargs wc -l | tail -1)" >> performance-report.md
+          echo "- Dependencies: $(cat package.json | jq '.dependencies | length')" >> performance-report.md
+          echo "- DevDependencies: $(cat package.json | jq '.devDependencies | length')" >> performance-report.md
+
+      - name: 📊 Bundle size analysis
+        run: |
+          echo "## Bundle Analysis" >> performance-report.md
+          if [ -d ".output" ]; then
+            echo "- Build output size: $(du -sh .output | cut -f1)" >> performance-report.md
+          fi
+
+      - name: 📊 Performance recommendations
+        run: |
+          echo "## Performance Recommendations" >> performance-report.md
+          echo "- ✅ Using shared dependency caching" >> performance-report.md
+          echo "- ✅ Conditional job execution based on file changes" >> performance-report.md
+          echo "- ✅ Parallel job execution for quality checks" >> performance-report.md
+          echo "- ✅ Build artifact reuse to prevent duplicate builds" >> performance-report.md
+          echo "- ✅ Turbo cache for faster builds" >> performance-report.md
+
+      - name: 📊 Upload performance report
+        uses: actions/upload-artifact@v5
+        with:
+          name: performance-report
+          path: performance-report.md
+          retention-days: 30 

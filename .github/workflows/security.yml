@@ -1,0 +1,32 @@
+name: 🔒 Security Scan
+
+permissions:
+  pull-requests: write
+  contents: read
+
+on:
+  # Called from ci.yml for push and pull_request events
+  workflow_call:
+    secrets:
+      ANTHROPIC_API_KEY:
+        required: true
+  # Independent weekly security scan
+  schedule:
+    - cron: '0 0 * * 1' # Every Monday at midnight UTC
+
+jobs:
+  security:
+    name: 🔒 Security Analysis
+    runs-on: ubuntu-latest
+      
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 2
+      
+      - uses: anthropics/claude-code-security-review@main
+        with:
+          # Only comment on PRs when PR context is available
+          comment-pr: ${{ github.event.pull_request != null }}
+          claude-api-key: ${{ secrets.ANTHROPIC_API_KEY }}

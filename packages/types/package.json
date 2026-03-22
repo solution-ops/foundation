@@ -1,0 +1,18 @@
+{
+  "name": "@foundation/types",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./*": "./src/*.type.ts",
+    "./schemas/*": "./src/schemas/*.schema.ts"
+  },
+  "devDependencies": {
+    "@foundation/constants": "workspace:*",
+    "@foundation/db": "workspace:*",
+    "@foundation/tsconfig": "workspace:^"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
+  }
+}

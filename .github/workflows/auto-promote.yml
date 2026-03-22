@@ -1,0 +1,139 @@
+name: 🚀 Auto-Promote to Production
+
+on:
+  workflow_run:
+    workflows: ["🔭 CI Pipeline"]
+    types:
+      - completed
+    branches:
+      - dev
+
+jobs:
+  auto-promote:
+    name: 🚀 Auto-promote dev → main
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: 🔍 Verify staging deployment succeeded
+        id: verify-staging
+        run: |
+          # Get the workflow run details
+          RUN_ID="${{ github.event.workflow_run.id }}"
+          
+          # Check if deployment job succeeded
+          DEPLOY_STATUS=$(curl -s \
+            -H "Authorization: Bearer ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/runs/$RUN_ID/jobs" \
+            | jq -r '.jobs[] | select(.name | contains("Deploy stage")) | .conclusion')
+          
+          echo "Staging deployment status: $DEPLOY_STATUS"
+          
+          if [ "$DEPLOY_STATUS" = "success" ]; then
+            echo "staging-success=true" >> $GITHUB_OUTPUT
+            echo "✅ Staging deployment successful - proceeding with auto-promotion"
+          else
+            echo "staging-success=false" >> $GITHUB_OUTPUT
+            echo "❌ Staging deployment failed or not found - skipping auto-promotion"
+            exit 1
+          fi
+
+      - name: 🔧 Configure Git
+        if: steps.verify-staging.outputs.staging-success == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Debug: Show which token type we're using
+          if [ -n "${{ secrets.PAT_TOKEN }}" ]; then
+            echo "✅ Using PAT_TOKEN - workflows will be triggered"
+          else
+            echo "⚠️  Using GITHUB_TOKEN - workflows may NOT be triggered"
+          fi
+
+      - name: 🔄 Sync dev to main
+        if: steps.verify-staging.outputs.staging-success == 'true'
+        run: |
+          # Ensure we're on the latest dev
+          git checkout dev
+          git pull origin dev
+          
+          # Fetch main branch to ensure it's available locally
+          echo "🔄 Fetching main branch..."
+          git fetch origin main:main
+          
+          # Check if main is behind dev
+          BEHIND_COUNT=$(git rev-list --count main..dev)
+          echo "Main is $BEHIND_COUNT commits behind dev"
+          
+          if [ "$BEHIND_COUNT" -gt 0 ]; then
+            echo "🚀 Promoting dev to main ($BEHIND_COUNT commits)"
+            
+            # Switch to main and merge dev
+            git checkout main
+            git pull origin main
+            git merge dev --no-edit
+            
+            # Push to main to trigger production deployment
+            echo "🚀 Pushing to main branch to trigger release..."
+            git push origin main
+            
+            echo "✅ Successfully promoted dev to main"
+            echo "🎯 Release workflow should now be triggered automatically"
+            echo "📊 Monitor progress: https://github.com/${{ github.repository }}/actions"
+          else
+            echo "ℹ️  Main is already up to date with dev - no promotion needed"
+          fi
+
+      - name: 📝 Create promotion summary
+        if: steps.verify-staging.outputs.staging-success == 'true'
+        run: |
+          echo "## 🚀 Auto-Promotion Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Source**: \`dev\` branch" >> $GITHUB_STEP_SUMMARY  
+          echo "- **Target**: \`main\` branch" >> $GITHUB_STEP_SUMMARY
+          echo "- **Staging Deployment**: ✅ Success" >> $GITHUB_STEP_SUMMARY
+          echo "- **Release Trigger**: 🚀 Pushed to main branch" >> $GITHUB_STEP_SUMMARY
+          echo "- **Production Pipeline**: Should start automatically" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔍 **Next Steps:**" >> $GITHUB_STEP_SUMMARY
+          echo "1. Check [Actions tab](https://github.com/${{ github.repository }}/actions) for CI Pipeline on main" >> $GITHUB_STEP_SUMMARY
+          echo "2. CI should deploy to production environment" >> $GITHUB_STEP_SUMMARY
+          echo "3. If no CI runs on main, ensure PAT_TOKEN is configured with 'workflow' permissions" >> $GITHUB_STEP_SUMMARY
+
+      - name: 🎯 Comment on related PRs
+        if: steps.verify-staging.outputs.staging-success == 'true'
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+          script: |
+            // Find recently merged PRs that targeted dev
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'closed',
+              base: 'dev',
+              sort: 'updated',
+              direction: 'desc',
+              per_page: 5
+            });
+            
+            const recentlyMerged = prs.filter(pr => 
+              pr.merged_at && 
+              new Date(pr.merged_at) > new Date(Date.now() - 24 * 60 * 60 * 1000) // Last 24 hours
+            );
+            
+            for (const pr of recentlyMerged) {
+              await github.rest.issues.createComment({
+                issue_number: pr.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `🚀 **Auto-Promotion Complete**\n\nYour changes have been promoted to the main branch to trigger release!\n\n- ✅ **Staging**: Deployed and verified\n- 🚀 **Main Branch**: Updated with your changes\n- 📊 **Release**: Should trigger automatically via CI pipeline\n- 🔍 **Monitor**: Check the [Actions tab](${context.payload.repository.html_url}/actions) for CI running on main\n\nIf you don't see the CI pipeline running on main, ensure PAT_TOKEN is configured! 🔧`
+              });
+            } 

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "base-vega",
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "../../packages/ui/src/styles/globals.css",
+    "baseColor": "zinc",
+    "cssVariables": true
+  },
+  "iconLibrary": "phosphor",
+  "aliases": {
+    "components": "@foundation/ui/components",
+    "hooks": "@foundation/ui/hooks",
+    "utils": "@foundation/ui/utils/cn",
+    "lib": "@foundation/ui/lib",
+    "ui": "@foundation/ui/components"
+  }
+}

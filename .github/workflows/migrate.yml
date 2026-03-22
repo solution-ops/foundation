@@ -1,0 +1,68 @@
+name: 🗃️ Database Migration & Schema Sync
+
+on:
+  workflow_call:
+    inputs:
+      deps-cache-key:
+        description: 'Cache key for dependencies'
+        type: string
+        required: false
+      database_url_b64:
+        description: 'Base64-encoded DATABASE_URL (for PR feature branches — bypasses GitHub secret suppression)'
+        type: string
+        required: false
+    secrets:
+      DATABASE_URL:
+        description: 'Database connection string'
+        required: false
+
+jobs:
+  migrate:
+    name: 🗃️ Migrate & Sync Schema
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🔓 Resolve DATABASE_URL
+        env:
+          DATABASE_URL_B64: ${{ inputs.database_url_b64 }}
+          DATABASE_URL_SECRET: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [[ -n "$DATABASE_URL_B64" ]]; then
+            echo "DATABASE_URL=$(printf '%s' "$DATABASE_URL_B64" | base64 -d)" >> "$GITHUB_ENV"
+          else
+            echo "DATABASE_URL=$DATABASE_URL_SECRET" >> "$GITHUB_ENV"
+          fi
+
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v5
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4.2.0
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: 📥 Restore dependencies cache
+        if: inputs.deps-cache-key
+        id: cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: ${{ inputs.deps-cache-key }}
+          restore-keys: |
+            deps-${{ hashFiles('pnpm-lock.yaml') }}-
+
+      - name: 📥 Install deps
+        if: inputs.deps-cache-key == '' || steps.cache.outputs.cache-hit != 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: 🗃️ Run database migrations
+        run: pnpm db:migrate
+
+      - name: 🔄 Push schema changes
+        run: pnpm db:push

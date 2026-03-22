@@ -1,0 +1,15 @@
+# Neon Postgres connection string
+# Get yours at https://neon.tech — copy the "Connection string" from the dashboard
+DATABASE_URL="postgresql://user:password@ep-example-123456.us-east-2.aws.neon.tech/neondb?sslmode=require"
+
+# Better Auth secret — generate with: openssl rand --base64 32
+AUTH_SECRET=""
+
+# Google OAuth credentials — https://console.cloud.google.com/apis/credentials
+# Create an "OAuth 2.0 Client ID" with authorized redirect URI:
+#   http://localhost:8787/api/auth/callback/google
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
+
+# Comma-separated list of allowed CORS origins (no trailing slash)
+ALLOWED_ORIGINS="http://localhost:8080"

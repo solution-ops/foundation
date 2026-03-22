@@ -1,0 +1,21 @@
+{
+  "name": "@foundation/utils",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./common/*": "./src/common/*.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest --watch"
+  },
+  "dependencies": {
+    "@paralleldrive/cuid2": "^3.3.0"
+  },
+  "devDependencies": {
+    "@foundation/tsconfig": "workspace:^",
+    "@foundation/types": "workspace:^",
+    "vitest": "^4.0.18"
+  }
+}

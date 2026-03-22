@@ -1,0 +1,44 @@
+{
+  "name": "foundation",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "GPL-3.0-or-later",
+  "packageManager": "pnpm@10.24.0",
+  "description": "Task management application with TanStack and Nitro",
+  "author": "mason-smith",
+  "keywords": [
+    "cloud software",
+    "saas",
+    "react",
+    "nitro",
+    "tauri"
+  ],
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "dev:workers": "set -a && . ./.dev.vars && set +a && pnpx wrangler dev",
+    "test": "turbo test",
+    "e2e": "turbo run e2e",
+    "test:watch": "turbo run test:watch",
+    "lint": "biome check .",
+    "lint:fix": "biome check . --write",
+    "db:generate": "pnpm --filter @foundation/db run db:generate",
+    "db:push": "pnpm --filter @foundation/db run db:push",
+    "db:migrate": "pnpm --filter @foundation/db run db:migrate",
+    "db:studio": "pnpm --filter @foundation/db run db:studio",
+    "prepare": "husky",
+    "changeset": "changeset",
+    "version-packages": "changeset version && node scripts/sync-app-version.mjs && pnpm install --lockfile-only"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.4",
+    "@changesets/changelog-github": "^0.5.2",
+    "@changesets/cli": "^2.29.8",
+    "@commitlint/cli": "^20.4.2",
+    "@commitlint/config-conventional": "^20.4.2",
+    "husky": "^9.1.7",
+    "turbo": "^2.8.10",
+    "wrangler": "^4.67.0"
+  }
+}

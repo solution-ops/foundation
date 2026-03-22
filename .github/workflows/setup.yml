@@ -1,0 +1,61 @@
+name: 🔧 Setup Dependencies
+
+on:
+  workflow_call:
+    outputs:
+      deps-cache-key:
+        description: 'Cache key for dependencies'
+        value: ${{ jobs.setup.outputs.deps-cache-key }}
+    inputs:
+      turbo-cache:
+        description: 'Enable Turbo remote caching'
+        type: boolean
+        default: true
+
+jobs:
+  setup:
+    name: 🔧 Setup Dependencies
+    runs-on: ubuntu-latest
+    outputs:
+      deps-cache-key: ${{ steps.cache-key.outputs.key }}
+    
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v5
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4.2.0
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: 🔑 Generate cache key
+        id: cache-key
+        run: |
+          echo "key=deps-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('turbo.json') }}" >> $GITHUB_OUTPUT
+
+      - name: 📥 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🏗️ Cache Turbo
+        uses: actions/cache@v5
+        if: inputs.turbo-cache
+        with:
+          path: .turbo
+          key: turbo-${{ github.sha }}
+          restore-keys: |
+            turbo-
+
+      - name: 📦 Cache dependencies & build artifacts
+        uses: actions/cache@v5
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: ${{ steps.cache-key.outputs.key }}
+          restore-keys: |
+            deps-${{ hashFiles('pnpm-lock.yaml') }}- 
