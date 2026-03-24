@@ -1,4 +1,3 @@
-import { DotsThreeIcon, PaletteIcon, PencilSimpleIcon, TrashIcon } from "@phosphor-icons/react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@foundation/ui/components/dropdown-menu";
 import { SidebarMenuAction } from "@foundation/ui/components/sidebar";
+import { DotsThreeIcon, PaletteIcon, PencilSimpleIcon, TrashIcon } from "@phosphor-icons/react";
 import type { CategoryItem } from "../../api/categories/list-categories";
 import { useUpdateCategory } from "../../api/categories/update-category";
 import type { CategoryColor } from "../../types/categories";

@@ -1,7 +1,6 @@
-import { queryOptions, useQuery } from "@tanstack/react-query";
-
 import type { HealthResponse } from "@foundation/types/health";
 import type { QueryConfig } from "@foundation/ui/lib/react-query";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 
 export async function fetchHealth(): Promise<HealthResponse> {
   const res = await fetch("/api/health");

@@ -1,4 +1,3 @@
-import { DotsThreeIcon, PencilSimpleIcon, TrashIcon } from "@phosphor-icons/react";
 import { Button } from "@foundation/ui/components/button";
 import { Checkbox } from "@foundation/ui/components/checkbox";
 import {
@@ -9,6 +8,7 @@ import {
 } from "@foundation/ui/components/dropdown-menu";
 import { useIsMobile } from "@foundation/ui/hooks/use-mobile";
 import { cn } from "@foundation/ui/utils/cn";
+import { DotsThreeIcon, PencilSimpleIcon, TrashIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 
 import { useListCategories } from "../../api/categories/list-categories";

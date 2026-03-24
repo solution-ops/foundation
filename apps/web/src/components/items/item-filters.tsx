@@ -1,9 +1,9 @@
-import { FunnelIcon, PlusIcon, XIcon } from "@phosphor-icons/react";
 import { Button } from "@foundation/ui/components/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@foundation/ui/components/drawer";
 import { Popover, PopoverContent, PopoverTrigger } from "@foundation/ui/components/popover";
 import { useIsMobile } from "@foundation/ui/hooks/use-mobile";
 import { cn } from "@foundation/ui/utils/cn";
+import { FunnelIcon, PlusIcon, XIcon } from "@phosphor-icons/react";
 
 import { useListCategories } from "../../api/categories/list-categories";
 import type { CategoryColor } from "../../types/categories";

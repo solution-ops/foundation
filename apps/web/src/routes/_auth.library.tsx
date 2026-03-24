@@ -1,6 +1,6 @@
+import { Skeleton } from "@foundation/ui/components/skeleton";
 import { CaretRightIcon, PlusIcon } from "@phosphor-icons/react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Skeleton } from "@foundation/ui/components/skeleton";
 import { useState } from "react";
 import { useListCategories } from "../api/categories/list-categories";
 import { CategoryColorDot } from "../components/categories/category-color-dot";

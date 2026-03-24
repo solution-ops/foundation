@@ -1,6 +1,6 @@
+import { Button } from "@foundation/ui/components/button";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 import { Link } from "@tanstack/react-router";
-import { Button } from "@foundation/ui/components/button";
 
 /**
  * Not-found component for TanStack Router.

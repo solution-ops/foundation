@@ -1,7 +1,7 @@
+import { Button } from "@foundation/ui/components/button";
 import { WarningCircleIcon } from "@phosphor-icons/react";
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
-import { Button } from "@foundation/ui/components/button";
 
 /**
  * Route-level error component for TanStack Router.

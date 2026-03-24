@@ -1,4 +1,3 @@
-import { ArrowCounterClockwiseIcon, DotsThreeIcon } from "@phosphor-icons/react";
 import { Button } from "@foundation/ui/components/button";
 import {
   DropdownMenu,
@@ -8,6 +7,7 @@ import {
 } from "@foundation/ui/components/dropdown-menu";
 import { useIsMobile } from "@foundation/ui/hooks/use-mobile";
 import { cn } from "@foundation/ui/utils/cn";
+import { ArrowCounterClockwiseIcon, DotsThreeIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 
 import { useRestoreItem } from "../../api/items/restore-item";

@@ -1,7 +1,7 @@
-import { useRouter, useSearch } from "@tanstack/react-router";
 import { queryClient } from "@foundation/ui/components/provider";
 import { authClient } from "@foundation/ui/lib/auth-client";
 import { ensureError } from "@foundation/utils/common/ensure-error";
+import { useRouter, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { fetchCurrentUserQueryOptions } from "../api/auth/current-user";

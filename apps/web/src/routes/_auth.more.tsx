@@ -1,7 +1,7 @@
-import { GearSixIcon, InfoIcon, SignOutIcon } from "@phosphor-icons/react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { queryClient } from "@foundation/ui/components/provider";
 import { authClient } from "@foundation/ui/lib/auth-client";
+import { GearSixIcon, InfoIcon, SignOutIcon } from "@phosphor-icons/react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCurrentUser } from "../api/auth/current-user";
 import { authKeys } from "../api/query-keys";
 

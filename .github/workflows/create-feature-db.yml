@@ -107,8 +107,8 @@ jobs:
             --caching-disabled 2>&1)
           echo "$CREATE_OUTPUT"
 
-          # Extract ID from structured JSON field to avoid matching account IDs
-          HYPERDRIVE_ID=$(echo "$CREATE_OUTPUT" | grep -oP '"id":\s*"\K[0-9a-f]{32}')
+          # Extract ID from wrangler JSON output (grep -oP not available on all runners)
+          HYPERDRIVE_ID=$(echo "$CREATE_OUTPUT" | sed -n 's/.*"id": *"\([0-9a-f]\{32\}\)".*/\1/p' | head -1)
 
           if [[ -z "$HYPERDRIVE_ID" ]]; then
             echo "::error::wrangler create succeeded but could not parse Hyperdrive ID from output"

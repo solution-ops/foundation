@@ -1,9 +1,9 @@
-import type { Icon } from "@phosphor-icons/react";
-import { PaintBrushIcon, UserIcon } from "@phosphor-icons/react";
-import { createFileRoute, Link, Outlet, redirect, useLocation, useNavigate } from "@tanstack/react-router";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@foundation/ui/components/select";
 import { useIsMobile } from "@foundation/ui/hooks/use-mobile";
 import { cn } from "@foundation/ui/utils/cn";
+import type { Icon } from "@phosphor-icons/react";
+import { PaintBrushIcon, UserIcon } from "@phosphor-icons/react";
+import { createFileRoute, Link, Outlet, redirect, useLocation, useNavigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_auth/settings")({
   beforeLoad: ({ location }) => {

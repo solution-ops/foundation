@@ -1,5 +1,5 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { queryClient } from "@foundation/ui/components/provider";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { object, string } from "zod";
 import { fetchCurrentUserQueryOptions } from "../api/auth/current-user";
 import { AuthForm } from "../components/auth.form";

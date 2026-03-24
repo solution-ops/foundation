@@ -1,5 +1,5 @@
-import { infiniteQueryOptions, useInfiniteQuery } from "@tanstack/react-query";
 import type { ItemPriority, ItemStatus } from "@foundation/types/schemas/items";
+import { infiniteQueryOptions, useInfiniteQuery } from "@tanstack/react-query";
 import { throwIfNotOk } from "../../lib/api-error";
 import { type InferResponseType, rpc } from "../../lib/rpc";
 
