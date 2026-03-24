@@ -1,3 +1,5 @@
+import { Button } from "@foundation/ui/components/button";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@foundation/ui/components/drawer";
 import {
   FolderSimplePlusIcon,
   GearSixIcon,
@@ -7,11 +9,9 @@ import {
   TrashIcon,
 } from "@phosphor-icons/react";
 import { useNavigate } from "@tanstack/react-router";
-import { Button } from "@foundation/ui/components/button";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@foundation/ui/components/drawer";
 import { useState } from "react";
 import { openCommandPalette } from "../hooks/use-command-palette";
-import { triggerNewTask } from "../hooks/use-quick-actions";
+import { triggerNewItem } from "../hooks/use-quick-actions";
 import { CreateCategoryDialog } from "./categories/create-category-dialog";
 
 export function FABDrawer() {
@@ -47,9 +47,9 @@ export function FABDrawer() {
 
           <div className="space-y-3 px-4 pb-4">
             {/* Primary action */}
-            <Button className="w-full" onClick={() => handleAction(triggerNewTask)}>
+            <Button className="w-full" onClick={() => handleAction(triggerNewItem)}>
               <ListPlusIcon className="size-5" />
-              New Task
+              New Item
             </Button>
 
             {/* Secondary actions */}

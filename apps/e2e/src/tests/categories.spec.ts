@@ -1,13 +1,13 @@
 import { expect, test } from "../config/setup";
-import { apiResponse } from "../fixtures/tasks-page";
+import { apiResponse } from "../fixtures/items-page";
 
-test("user can create categories and filter tasks by category", async ({
+test("user can create categories and filter items by category", async ({
   authenticatedPage: page,
   categoriesDesktopPage: categories,
-  tasksDesktopPage: tasks,
+  itemsDesktopPage: items,
 }) => {
   // User lands on the dashboard and sees the sidebar categories group
-  await tasks.expectLoaded();
+  await items.expectLoaded();
   await categories.expectLoaded();
 
   // Sidebar shows the empty state for categories
@@ -24,26 +24,26 @@ test("user can create categories and filter tasks by category", async ({
   // Empty state is no longer shown
   await expect(categories.addCategoryEmptyButton).not.toBeVisible();
 
-  // User creates a task assigned to the "Work" category
-  await tasks.openNewTaskDialog();
-  await tasks.titleInput.fill("Finish report");
+  // User creates an item assigned to the "Work" category
+  await items.openNewItemDialog();
+  await items.titleInput.fill("Finish report");
   await page.getByRole("combobox", { name: "Category" }).click();
   await page.getByRole("option", { name: "Work" }).click();
-  await Promise.all([page.waitForResponse(apiResponse("/tasks", "POST")), tasks.createButton.click()]);
-  await tasks.expectTaskVisible("Finish report");
+  await Promise.all([page.waitForResponse(apiResponse("/items", "POST")), items.createButton.click()]);
+  await items.expectItemVisible("Finish report");
 
   // The Work category now shows a badge with count 1
   await categories.expectCategoryBadge("Work", 1);
 
-  // User clicks the Work category to filter tasks
+  // User clicks the Work category to filter items
   await categories.clickCategory("Work");
   await categories.expectUrlContainsCategory();
-  await tasks.expectTaskVisible("Finish report");
+  await items.expectItemVisible("Finish report");
 
-  // User clicks the Personal category — no tasks should appear
+  // User clicks the Personal category — no items should appear
   await categories.clickCategory("Personal");
   await categories.expectUrlContainsCategory();
-  await tasks.expectTaskNotVisible("Finish report");
+  await items.expectItemNotVisible("Finish report");
 
   // User collapses the categories group
   await categories.collapseCategories();
@@ -56,8 +56,8 @@ test("user can create categories and filter tasks by category", async ({
   await categories.expectCategoryVisible("Personal");
 });
 
-test("user can rename a category inline", async ({ categoriesDesktopPage: categories, tasksDesktopPage: tasks }) => {
-  await tasks.expectLoaded();
+test("user can rename a category inline", async ({ categoriesDesktopPage: categories, itemsDesktopPage: items }) => {
+  await items.expectLoaded();
   await categories.expectLoaded();
 
   // Create a category to rename
@@ -72,8 +72,8 @@ test("user can rename a category inline", async ({ categoriesDesktopPage: catego
   await categories.expectCategoryVisible("New Name");
 });
 
-test("user can change a category color", async ({ categoriesDesktopPage: categories, tasksDesktopPage: tasks }) => {
-  await tasks.expectLoaded();
+test("user can change a category color", async ({ categoriesDesktopPage: categories, itemsDesktopPage: items }) => {
+  await items.expectLoaded();
   await categories.expectLoaded();
 
   // Create a category with blue color
@@ -89,9 +89,9 @@ test("user can change a category color", async ({ categoriesDesktopPage: categor
 
 test("user can delete a category with confirmation", async ({
   categoriesDesktopPage: categories,
-  tasksDesktopPage: tasks,
+  itemsDesktopPage: items,
 }) => {
-  await tasks.expectLoaded();
+  await items.expectLoaded();
   await categories.expectLoaded();
 
   // Create a category to delete
@@ -105,8 +105,8 @@ test("user can delete a category with confirmation", async ({
   await categories.expectCategoryNotVisible("Temporary");
 });
 
-test("user can cancel category deletion", async ({ categoriesDesktopPage: categories, tasksDesktopPage: tasks }) => {
-  await tasks.expectLoaded();
+test("user can cancel category deletion", async ({ categoriesDesktopPage: categories, itemsDesktopPage: items }) => {
+  await items.expectLoaded();
   await categories.expectLoaded();
 
   // Create a category

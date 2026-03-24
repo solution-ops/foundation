@@ -1,5 +1,5 @@
 import { categories } from "@foundation/db/schemas/categories";
-import { tasks } from "@foundation/db/schemas/tasks";
+import { items } from "@foundation/db/schemas/items";
 import { users } from "@foundation/db/schemas/users";
 import { eq } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
@@ -56,10 +56,10 @@ async function seedCategory(overrides: Partial<typeof categories.$inferInsert> =
 
 // --- Helper to seed a task directly ---
 
-async function seedTask(overrides: Partial<typeof tasks.$inferInsert> = {}) {
+async function seedTask(overrides: Partial<typeof items.$inferInsert> = {}) {
   const now = new Date();
   const [task] = await db
-    .insert(tasks)
+    .insert(items)
     .values({
       userId: USER_ID,
       title: "Seeded task",
@@ -149,7 +149,7 @@ describe("listCategories", () => {
 
     const result = await listCategories(db, USER_ID);
 
-    expect(result[0].taskCount).toBe(2);
+    expect(result[0].itemCount).toBe(2);
   });
 
   it("excludes soft-deleted tasks from count", async () => {
@@ -159,7 +159,7 @@ describe("listCategories", () => {
 
     const result = await listCategories(db, USER_ID);
 
-    expect(result[0].taskCount).toBe(1);
+    expect(result[0].itemCount).toBe(1);
   });
 
   it("returns zero task count for category with no tasks", async () => {
@@ -167,7 +167,7 @@ describe("listCategories", () => {
 
     const result = await listCategories(db, USER_ID);
 
-    expect(result[0].taskCount).toBe(0);
+    expect(result[0].itemCount).toBe(0);
   });
 
   it("returns only the current user's categories", async () => {
@@ -301,7 +301,7 @@ describe("deleteCategory", () => {
 
     await deleteCategory(db, USER_ID, category.id);
 
-    const [updated] = await db.select().from(tasks).where(eq(tasks.id, task.id));
+    const [updated] = await db.select().from(items).where(eq(items.id, task.id));
 
     expect(updated.categoryId).toBeNull();
   });

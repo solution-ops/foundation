@@ -1,11 +1,11 @@
 import { resolve } from "node:path";
-import { createId } from "@paralleldrive/cuid2";
 import { createDb } from "@foundation/db/core";
 import { accounts } from "@foundation/db/schemas/accounts";
 import { categories } from "@foundation/db/schemas/categories";
+import { items } from "@foundation/db/schemas/items";
 import { sessions } from "@foundation/db/schemas/sessions";
-import { tasks } from "@foundation/db/schemas/tasks";
 import { type User, users } from "@foundation/db/schemas/users";
+import { createId } from "@paralleldrive/cuid2";
 import { hashPassword } from "better-auth/crypto";
 import { config } from "dotenv";
 import { eq, sql } from "drizzle-orm";
@@ -102,7 +102,7 @@ export async function createSeedUser(userData?: Partial<TestUser>): Promise<Test
 export async function cleanupSeedUser(userId: string): Promise<void> {
   try {
     // Clean up in order: tasks, categories, sessions, accounts, then user
-    await db.delete(tasks).where(eq(tasks.userId, userId));
+    await db.delete(items).where(eq(items.userId, userId));
     await db.delete(categories).where(eq(categories.userId, userId));
     await db.delete(sessions).where(eq(sessions.userId, userId));
     await db.delete(accounts).where(eq(accounts.userId, userId));
@@ -150,7 +150,7 @@ export async function cleanupAllTestUsers(): Promise<void> {
  * Deletes all tasks for a given user — used to ensure clean state before tests
  */
 export async function cleanupUserTasks(userId: string): Promise<void> {
-  await db.delete(tasks).where(eq(tasks.userId, userId));
+  await db.delete(items).where(eq(items.userId, userId));
 }
 
 /**

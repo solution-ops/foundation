@@ -1,67 +1,67 @@
 import { expect, test } from "../config/setup";
 
-test.describe("mobile: task row tap-to-expand", () => {
-  test("tapping a task row reveals edit and delete actions", async ({ tasksMobilePage: tasks }) => {
-    await tasks.createTask("Tap test task");
+test.describe("mobile: item row tap-to-expand", () => {
+  test("tapping an item row reveals edit and delete actions", async ({ itemsMobilePage: items }) => {
+    await items.createItem("Tap test item");
 
     // Desktop dropdown menu should NOT be rendered on mobile
-    await tasks.expectNoDropdownMenu();
+    await items.expectNoDropdownMenu();
 
-    // Task row should be tappable (role="button")
-    await expect(tasks.taskRow("Tap test task")).toBeVisible();
+    // Item row should be tappable (role="button")
+    await expect(items.itemRow("Tap test item")).toBeVisible();
 
     // Tap to expand — edit and delete buttons appear
-    await tasks.expandTaskRow("Tap test task");
-    await expect(tasks.expandedDeleteButton).toBeVisible();
+    await items.expandItemRow("Tap test item");
+    await expect(items.expandedDeleteButton).toBeVisible();
 
     // Tap again to collapse — buttons disappear
-    await tasks.collapseTaskRow("Tap test task");
-    await expect(tasks.expandedDeleteButton).not.toBeVisible();
+    await items.collapseItemRow("Tap test item");
+    await expect(items.expandedDeleteButton).not.toBeVisible();
 
     // Clean up
-    await tasks.deleteTask("Tap test task");
-    await tasks.expectEmptyState();
+    await items.deleteItem("Tap test item");
+    await items.expectEmptyState();
   });
 });
 
 test.describe("mobile: full crud flow", () => {
-  test("user can create, edit, and delete tasks on mobile", async ({ tasksMobilePage: tasks }) => {
+  test("user can create, edit, and delete items on mobile", async ({ itemsMobilePage: items }) => {
     // Empty state
-    await tasks.expectLoaded();
-    await tasks.expectEmptyState();
+    await items.expectLoaded();
+    await items.expectEmptyState();
 
-    // Create a task
-    await tasks.createTask("Mobile task");
-    await tasks.expectTaskVisible("Todo");
+    // Create an item
+    await items.createItem("Mobile item");
+    await items.expectItemVisible("Todo");
 
     // Toggle done via checkbox (same UX on mobile)
-    await tasks.toggleTaskDone("Mobile task");
-    await tasks.expectTaskVisible("Done");
+    await items.toggleItemDone("Mobile item");
+    await items.expectItemVisible("Done");
 
     // Toggle back to todo
-    await tasks.toggleTaskDone("Mobile task");
-    await tasks.expectTaskVisible("Todo");
+    await items.toggleItemDone("Mobile item");
+    await items.expectItemVisible("Todo");
 
     // Tap row to expand, then edit
-    await tasks.openEditDialog("Mobile task");
-    await tasks.editTaskTitle("Mobile task updated");
+    await items.openEditDialog("Mobile item");
+    await items.editItemTitle("Mobile item updated");
 
     // Tap row to expand, then delete
-    await tasks.deleteTask("Mobile task updated");
-    await tasks.expectEmptyState();
+    await items.deleteItem("Mobile item updated");
+    await items.expectEmptyState();
   });
 });
 
 test.describe("mobile: filter bar layout", () => {
-  test("new task button is visible on mobile", async ({ tasksMobilePage: tasks }) => {
-    await expect(tasks.newTaskButton).toBeVisible();
+  test("new item button is visible on mobile", async ({ itemsMobilePage: items }) => {
+    await expect(items.newItemButton).toBeVisible();
   });
 });
 
 test.describe("mobile: bottom tab bar", () => {
-  test("bottom tab bar is visible on mobile", async ({ tasksMobilePage: tasks }) => {
-    await expect(tasks.bottomTabBar).toBeVisible();
-    await expect(tasks.bottomTabBar.getByRole("link", { name: "Dashboard" })).toBeVisible();
-    await expect(tasks.bottomTabBar.getByRole("link", { name: "Trash" })).toBeVisible();
+  test("bottom tab bar is visible on mobile", async ({ itemsMobilePage: items }) => {
+    await expect(items.bottomTabBar).toBeVisible();
+    await expect(items.bottomTabBar.getByRole("link", { name: "Dashboard" })).toBeVisible();
+    await expect(items.bottomTabBar.getByRole("link", { name: "Trash" })).toBeVisible();
   });
 });
