@@ -104,7 +104,11 @@ jobs:
           echo "Creating Hyperdrive config: $HD_NAME"
           CREATE_OUTPUT=$(pnpm exec wrangler hyperdrive create "$HD_NAME" \
             --connection-string="$CONNECTION_STRING" \
-            --caching-disabled 2>&1)
+            --caching-disabled 2>&1) || {
+            echo "::error::wrangler hyperdrive create failed:"
+            echo "$CREATE_OUTPUT"
+            exit 1
+          }
           echo "$CREATE_OUTPUT"
 
           # Extract ID from wrangler JSON output (grep -oP not available on all runners)
