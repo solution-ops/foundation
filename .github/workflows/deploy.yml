@@ -136,6 +136,7 @@ jobs:
       - name: 🔗 Configure wrangler.jsonc for deployment
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           HYPERDRIVE_ID: ${{ inputs.hyperdrive-id }}
           WORKER_NAME: foundation-${{ inputs.branch-name }}
         run: |
@@ -158,6 +159,7 @@ jobs:
         with:
           command: deploy
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           packageManager: pnpm
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           secrets: |

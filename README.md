@@ -202,6 +202,7 @@ Set these in **Settings → Secrets and variables → Actions → Variables**:
 | `NEON_ROLE_NAME` | `neondb_owner` | Database role for feature branches |
 | `HYPERDRIVE_ID_STAGE` | `abc123def456...` | Cloudflare Hyperdrive config ID for staging |
 | `HYPERDRIVE_ID_PROD` | `789abc012def...` | Cloudflare Hyperdrive config ID for production |
+| `CLOUDFLARE_ACCOUNT_ID` | `a92d163...` | Cloudflare account ID — required so wrangler skips the `/memberships` API call, which fails with zone-scoped tokens |
 | `CLOUDFLARE_APP_DOMAIN` | `my-account.workers.dev` | Workers domain suffix |
 | `ALLOWED_ORIGINS_STAGE` | `https://foundation-stage.workers.dev` | Staging CORS origin |
 | `ALLOWED_ORIGINS_PROD` | `https://foundation-prod.workers.dev` | Production CORS origin |
@@ -210,7 +211,7 @@ Set these in **Settings → Secrets and variables → Actions → Variables**:
 ### Service Setup Checklist
 
 1. **Neon** — Create a project, note the project ID. Create `dev` and `main` branches. Copy connection strings for each.
-2. **Cloudflare** — Create an API token with Workers and Hyperdrive permissions. Create Hyperdrive configs for staging and production, pointing at the Neon connection strings.
+2. **Cloudflare** — Create an API token with Workers and Hyperdrive permissions. Create Hyperdrive configs for staging and production, pointing at the Neon connection strings. Add the account ID as the `CLOUDFLARE_ACCOUNT_ID` variable (find it at the top of the Cloudflare dashboard or via `curl -H "Authorization: Bearer $TOKEN" https://api.cloudflare.com/client/v4/accounts`).
 3. **Google OAuth** — Create an OAuth 2.0 Client in Google Cloud Console. Add redirect URIs for each environment: `https://{worker-url}/api/auth/callback/google`.
 4. **GitHub** — Add all secrets and variables listed above. Enable GitHub Actions.
 
