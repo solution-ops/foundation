@@ -203,8 +203,8 @@ Set these in **Settings → Secrets and variables → Actions → Variables**:
 | `HYPERDRIVE_ID_STAGE` | `abc123def456...` | Cloudflare Hyperdrive config ID for staging |
 | `HYPERDRIVE_ID_PROD` | `789abc012def...` | Cloudflare Hyperdrive config ID for production |
 | `CLOUDFLARE_ACCOUNT_ID` | `a92d163...` | Cloudflare account ID — required so wrangler skips the `/memberships` API call, which fails with zone-scoped tokens |
-| `CLOUDFLARE_APP_DOMAIN` | `solutionstack.dev` | Custom domain for stage/prod deployments |
-| `WORKERS_DEV_SUBDOMAIN` | `mason-smith.workers.dev` | Workers.dev subdomain for PR/dev deployments (ALLOWED_ORIGINS) |
+| `CLOUDFLARE_APP_DOMAIN` | `example.com` | Custom domain for stage/prod deployments |
+| `WORKERS_DEV_SUBDOMAIN` | `my-account.workers.dev` | Workers.dev subdomain for PR/dev deployments (ALLOWED_ORIGINS) |
 | `ALLOWED_ORIGINS_STAGE` | `https://foundation-stage.workers.dev` | Staging CORS origin |
 | `ALLOWED_ORIGINS_PROD` | `https://foundation-prod.workers.dev` | Production CORS origin |
 | `STAGE_URL` | `https://foundation-stage.workers.dev` | Base URL for staging E2E tests |

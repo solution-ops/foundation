@@ -217,10 +217,10 @@ Optional:
 | `NEON_DATABASE_NAME` | `neondb` | `create-feature-db.yml` |
 | `NEON_ROLE_NAME` | `neondb_owner` | `create-feature-db.yml` |
 | `CLOUDFLARE_ACCOUNT_ID` | `a92d163...` | `deploy.yml`, `create-feature-db.yml`, `destroy-feature-environment.yml` |
-| `CLOUDFLARE_APP_DOMAIN` | `solutionstack.dev` | `deploy.yml` |
-| `WORKERS_DEV_SUBDOMAIN` | `mason-smith.workers.dev` | `deploy.yml` |
-| `ALLOWED_ORIGINS_STAGE` | `https://foundation-stage.solutionstack.dev` | `deploy.yml` |
-| `ALLOWED_ORIGINS_PROD` | `https://foundation.solutionstack.dev` | `deploy.yml` |
+| `CLOUDFLARE_APP_DOMAIN` | `example.com` | `deploy.yml` |
+| `WORKERS_DEV_SUBDOMAIN` | `my-account.workers.dev` | `deploy.yml` |
+| `ALLOWED_ORIGINS_STAGE` | `https://app-stage.example.com` | `deploy.yml` |
+| `ALLOWED_ORIGINS_PROD` | `https://app.example.com` | `deploy.yml` |
 
 `ALLOWED_ORIGINS` is computed automatically in CI as:
 - Feature environments: `https://foundation-{branch-name}.{WORKERS_DEV_SUBDOMAIN}`
