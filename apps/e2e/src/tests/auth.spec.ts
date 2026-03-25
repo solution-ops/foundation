@@ -185,7 +185,7 @@ test.describe("Authentication Flow", () => {
     test("should have theme functionality available", async ({ page }) => {
       await page.goto("/");
 
-      // Check if theme toggle exists (it might not be visible in current layout)
+      // Landing page has two theme toggles (nav + footer), use .first() to avoid strict mode
       const themeToggle = page.getByRole("button", { name: /toggle theme/i }).first();
       const themeToggleExists = (await themeToggle.count()) > 0;
 
@@ -196,7 +196,7 @@ test.describe("Authentication Flow", () => {
         await expect(page.locator("html")).toHaveAttribute("class", /dark|light/);
       } else {
         // If no theme toggle (e.g. mobile), just verify the page loads correctly
-        await expect(page.getByRole("heading", { name: /get things done/i })).toBeVisible();
+        await expect(page.getByRole("heading", { name: /build faster/i })).toBeVisible();
       }
     });
   });

@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { appConfig } from "@foundation/constants/app-config";
+import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_auth/about")({
   component: About,

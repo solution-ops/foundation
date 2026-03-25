@@ -1,11 +1,11 @@
 import { expect, type Locator, type Page } from "@playwright/test";
-import { apiResponse } from "./tasks-page";
+import { apiResponse } from "./items-page";
 
 /**
  * Page Object Model for sidebar category interactions.
  *
  * Encapsulates selectors and actions for creating categories via the
- * sidebar, filtering tasks by category, and verifying sidebar state.
+ * sidebar, filtering items by category, and verifying sidebar state.
  */
 export class CategoriesDesktopPage {
   readonly categoriesLabel: Locator;
@@ -52,7 +52,7 @@ export class CategoriesDesktopPage {
     await expect(this.page.getByRole("link", { name, exact: true })).not.toBeVisible();
   }
 
-  /** Assert a task count badge is visible for a given category. */
+  /** Assert an item count badge is visible for a given category. */
   async expectCategoryBadge(name: string, count: number) {
     const menuItem = this.page.locator("[data-slot='sidebar-menu-item']").filter({ hasText: name });
     await expect(menuItem.getByText(String(count))).toBeVisible();
@@ -88,10 +88,10 @@ export class CategoriesDesktopPage {
     await expect(this.dialogTitle).not.toBeVisible();
   }
 
-  /** Click a category in the sidebar to filter tasks. Waits for navigation. */
+  /** Click a category in the sidebar to filter items. Waits for navigation. */
   async clickCategory(name: string) {
     const link = this.page.getByRole("link", { name });
-    await Promise.all([this.page.waitForResponse(apiResponse("/tasks", "GET")), link.click()]);
+    await Promise.all([this.page.waitForResponse(apiResponse("/items", "GET")), link.click()]);
   }
 
   /** Assert the URL contains the expected category search param. */
@@ -121,7 +121,7 @@ export class CategoriesDesktopPage {
     return this.page.locator("[data-slot='sidebar-menu-item']").filter({ hasText: name });
   }
 
-  /** Open the kebab (⋯) context menu for a category. */
+  /** Open the kebab context menu for a category. */
   async openCategoryMenu(name: string) {
     const menuItem = this.categoryMenuItem(name);
     await menuItem.hover();

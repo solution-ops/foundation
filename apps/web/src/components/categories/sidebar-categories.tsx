@@ -1,6 +1,3 @@
-import { createId } from "@paralleldrive/cuid2";
-import { CaretRightIcon, PlusIcon } from "@phosphor-icons/react";
-import { useLocation } from "@tanstack/react-router";
 import {
   SidebarGroup,
   SidebarGroupAction,
@@ -12,6 +9,9 @@ import {
 } from "@foundation/ui/components/sidebar";
 import { Skeleton } from "@foundation/ui/components/skeleton";
 import { cn } from "@foundation/ui/utils/cn";
+import { createId } from "@paralleldrive/cuid2";
+import { CaretRightIcon, PlusIcon } from "@phosphor-icons/react";
+import { useLocation } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 import { type CategoryItem, useListCategories } from "../../api/categories/list-categories";
 import { useNewCategoryAction } from "../../hooks/use-quick-actions";

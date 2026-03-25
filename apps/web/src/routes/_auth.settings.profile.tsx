@@ -1,4 +1,3 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -14,6 +13,7 @@ import { Input } from "@foundation/ui/components/input";
 import { Label } from "@foundation/ui/components/label";
 import { queryClient } from "@foundation/ui/components/provider";
 import { authClient } from "@foundation/ui/lib/auth-client";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useCurrentUser } from "../api/auth/current-user";
 import { authKeys } from "../api/query-keys";

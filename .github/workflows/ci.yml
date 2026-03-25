@@ -101,6 +101,7 @@ jobs:
         github.ref == 'refs/heads/main' && 'prod' ||
         'dev' }}
       domain-suffix: ${{ vars.CLOUDFLARE_APP_DOMAIN }}
+      workers-dev-subdomain: ${{ vars.WORKERS_DEV_SUBDOMAIN }}
       stage-origin: ${{ vars.ALLOWED_ORIGINS_STAGE }}
       prod-origin: ${{ vars.ALLOWED_ORIGINS_PROD }}
       hyperdrive-id: ${{

@@ -1,5 +1,5 @@
-import type { RouteHandler } from "@hono/zod-openapi";
 import type { CategoryColor } from "@foundation/constants/category-colors";
+import type { RouteHandler } from "@hono/zod-openapi";
 import {
   createCategory,
   deleteCategory,

@@ -33,23 +33,20 @@ jobs:
         with:
           command: delete --name foundation-${{ needs.generate-branch-name.outputs.branch_name }} --force
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           packageManager: pnpm
         continue-on-error: true
 
       - name: 🔗 Delete Hyperdrive config
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           BRANCH_NAME: ${{ needs.generate-branch-name.outputs.branch_name }}
         run: |
           set -euo pipefail
 
           HD_NAME="foundation-pr-${BRANCH_NAME}"
-
-          # Get account ID from API
-          ACCOUNT_ID=$(curl -sf \
-            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
-            "https://api.cloudflare.com/client/v4/accounts?per_page=1" \
-            | jq -r '.result[0].id')
+          ACCOUNT_ID="$CLOUDFLARE_ACCOUNT_ID"
 
           # Find the Hyperdrive config by name
           HYPERDRIVE_ID=$(curl -sf \

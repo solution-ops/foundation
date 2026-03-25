@@ -1,5 +1,5 @@
-import { CheckCircleIcon, PlusIcon } from "@phosphor-icons/react";
 import { Button } from "@foundation/ui/components/button";
+import { CheckCircleIcon, PlusIcon } from "@phosphor-icons/react";
 
 type ItemEmptyStateProps = {
   onNewItem: () => void;

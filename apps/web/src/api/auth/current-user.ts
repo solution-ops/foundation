@@ -1,7 +1,6 @@
-import { queryOptions, useQuery } from "@tanstack/react-query";
-
 import { authClient } from "@foundation/ui/lib/auth-client";
 import type { QueryConfig } from "@foundation/ui/lib/react-query";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 import { authKeys } from "../query-keys";
 
 export async function fetchCurrentUser(): Promise<Awaited<ReturnType<typeof authClient.getSession>>> {

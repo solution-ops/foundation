@@ -1,7 +1,7 @@
-import { ArrowCounterClockwiseIcon, ClockIcon, PencilSimpleIcon, PlusIcon, TrashIcon } from "@phosphor-icons/react";
 import { Button } from "@foundation/ui/components/button";
 import { Skeleton } from "@foundation/ui/components/skeleton";
 import { cn } from "@foundation/ui/utils/cn";
+import { ArrowCounterClockwiseIcon, ClockIcon, PencilSimpleIcon, PlusIcon, TrashIcon } from "@phosphor-icons/react";
 import { format } from "date-fns/fp/format";
 import { formatDistanceWithOptions } from "date-fns/fp/formatDistanceWithOptions";
 import type { ReactNode } from "react";
@@ -157,8 +157,14 @@ function formatTimestamp(timestamp: string): string {
 function formatFieldValue(field: string, value: unknown): string {
   if (value === null || value === undefined) return "None";
   if (field === "dateDue" || field === "dateDeleted") return formatShortDate(new Date(value as string));
-  if (field === "status") { const s = value as string; return s === "in_progress" ? "In Progress" : s.charAt(0).toUpperCase() + s.slice(1); }
-  if (field === "priority") { const p = value as string; return p.charAt(0).toUpperCase() + p.slice(1); }
+  if (field === "status") {
+    const s = value as string;
+    return s === "in_progress" ? "In Progress" : s.charAt(0).toUpperCase() + s.slice(1);
+  }
+  if (field === "priority") {
+    const p = value as string;
+    return p.charAt(0).toUpperCase() + p.slice(1);
+  }
   if (typeof value === "string") return value.length > 80 ? `${value.slice(0, 80)}...` : value;
   return String(value);
 }

@@ -2,7 +2,7 @@ import type { Page } from "@playwright/test";
 import { test as base } from "@playwright/test";
 import { AuthPage } from "../fixtures/auth-page";
 import { CategoriesDesktopPage } from "../fixtures/categories-page";
-import { TasksDesktopPage, TasksMobilePage } from "../fixtures/tasks-page";
+import { ItemsDesktopPage, ItemsMobilePage } from "../fixtures/items-page";
 import { TrashDesktopPage, TrashMobilePage } from "../fixtures/trash-page";
 import {
   cleanupSeedUser,
@@ -16,8 +16,8 @@ type Fixtures = {
   testUser: TestUser;
   authPage: AuthPage;
   authenticatedPage: Page;
-  tasksDesktopPage: TasksDesktopPage;
-  tasksMobilePage: TasksMobilePage;
+  itemsDesktopPage: ItemsDesktopPage;
+  itemsMobilePage: ItemsMobilePage;
   trashDesktopPage: TrashDesktopPage;
   trashMobilePage: TrashMobilePage;
   categoriesDesktopPage: CategoriesDesktopPage;
@@ -51,7 +51,7 @@ export const test = base.extend<Fixtures>({
    * Combines the testUser and authPage fixtures to create a ready-to-use authenticated state
    */
   authenticatedPage: async ({ page, testUser }, use) => {
-    // Clean up any leftover tasks and categories from previous test runs
+    // Clean up any leftover items and categories from previous test runs
     await cleanupUserTasks(testUser.id);
     await cleanupUserCategories(testUser.id);
 
@@ -71,19 +71,19 @@ export const test = base.extend<Fixtures>({
   },
 
   /**
-   * Tasks desktop page fixture - provides a POM for desktop task interactions
+   * Items desktop page fixture - provides a POM for desktop item interactions
    * Depends on authenticatedPage to ensure the user is signed in
    */
-  tasksDesktopPage: async ({ authenticatedPage }, use) => {
-    await use(new TasksDesktopPage(authenticatedPage));
+  itemsDesktopPage: async ({ authenticatedPage }, use) => {
+    await use(new ItemsDesktopPage(authenticatedPage));
   },
 
   /**
-   * Tasks mobile page fixture - provides a POM for mobile task interactions
+   * Items mobile page fixture - provides a POM for mobile item interactions
    * Depends on authenticatedPage to ensure the user is signed in
    */
-  tasksMobilePage: async ({ authenticatedPage }, use) => {
-    await use(new TasksMobilePage(authenticatedPage));
+  itemsMobilePage: async ({ authenticatedPage }, use) => {
+    await use(new ItemsMobilePage(authenticatedPage));
   },
 
   /**

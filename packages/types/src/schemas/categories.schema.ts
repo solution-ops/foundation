@@ -20,7 +20,7 @@ export const categorySchema = z.object({
 });
 
 export const categoryWithCountSchema = categorySchema.extend({
-  taskCount: z.number().int(),
+  itemCount: z.number().int(),
 });
 
 export const categoryIdParamSchema = z.object({

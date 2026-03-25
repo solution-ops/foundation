@@ -1,5 +1,5 @@
-import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 import { cn } from "@foundation/ui/utils/cn";
+import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 
 type SearchTriggerProps = {
   onClick: () => void;

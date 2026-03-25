@@ -69,7 +69,7 @@ export async function listCategories(db: NodePgDatabase, userId: string): Promis
       order: categories.order,
       dateCreated: categories.dateCreated,
       dateUpdated: categories.dateUpdated,
-      taskCount: count(items.id),
+      itemCount: count(items.id),
     })
     .from(categories)
     .leftJoin(items, and(eq(items.categoryId, categories.id), isNull(items.dateDeleted)))
@@ -79,7 +79,7 @@ export async function listCategories(db: NodePgDatabase, userId: string): Promis
 
   return rows.map((r) => ({
     ...r,
-    taskCount: Number(r.taskCount),
+    itemCount: Number(r.itemCount),
   }));
 }
 

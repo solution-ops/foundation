@@ -20,6 +20,10 @@ on:
         description: 'Public domain suffix used for deployment URLs (for example: workers.dev)'
         required: true
         type: string
+      workers-dev-subdomain:
+        description: 'Workers.dev subdomain for PR/dev deployments (e.g. mason-smith.workers.dev)'
+        required: true
+        type: string
       stage-origin:
         description: 'Exact allowed origin URL for staging deployments'
         required: true
@@ -103,6 +107,7 @@ jobs:
         env:
           BRANCH_NAME: ${{ inputs.branch-name }}
           DOMAIN_SUFFIX: ${{ inputs.domain-suffix }}
+          WORKERS_DEV_SUBDOMAIN: ${{ inputs.workers-dev-subdomain }}
           STAGE_ORIGIN: ${{ inputs.stage-origin }}
           PROD_ORIGIN: ${{ inputs.prod-origin }}
           ENVIRONMENT: ${{ inputs.environment }}
@@ -123,11 +128,9 @@ jobs:
               ALLOWED_ORIGINS="$PROD_ORIGIN"
               ;;
             *)
-              if [[ -z "$DOMAIN_SUFFIX" ]]; then
-                echo "domain-suffix input is empty. Set repository variable CLOUDFLARE_APP_DOMAIN."
-                exit 1
-              fi
-              ALLOWED_ORIGINS="https://foundation-${BRANCH_NAME}.${DOMAIN_SUFFIX}"
+              # PR feature environments deploy to workers.dev
+              WORKER_NAME="foundation-${BRANCH_NAME}"
+              ALLOWED_ORIGINS="https://${WORKER_NAME}.${WORKERS_DEV_SUBDOMAIN}"
               ;;
           esac
 
@@ -136,6 +139,7 @@ jobs:
       - name: 🔗 Configure wrangler.jsonc for deployment
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           HYPERDRIVE_ID: ${{ inputs.hyperdrive-id }}
           WORKER_NAME: foundation-${{ inputs.branch-name }}
         run: |
@@ -158,6 +162,7 @@ jobs:
         with:
           command: deploy
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           packageManager: pnpm
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           secrets: |

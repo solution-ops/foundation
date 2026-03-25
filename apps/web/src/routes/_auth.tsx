@@ -1,12 +1,3 @@
-import {
-  CaretUpDownIcon,
-  GearSixIcon,
-  MagnifyingGlassIcon,
-  MoonIcon,
-  SignOutIcon,
-  SunIcon,
-} from "@phosphor-icons/react";
-import { createFileRoute, Link, Outlet, redirect, useLocation, useMatchRoute, useRouter } from "@tanstack/react-router";
 import { appConfig } from "@foundation/constants/app-config";
 import {
   DropdownMenu,
@@ -41,6 +32,15 @@ import {
 } from "@foundation/ui/components/sidebar";
 import { useTheme } from "@foundation/ui/hooks/use-theme";
 import { authClient } from "@foundation/ui/lib/auth-client";
+import {
+  CaretUpDownIcon,
+  GearSixIcon,
+  MagnifyingGlassIcon,
+  MoonIcon,
+  SignOutIcon,
+  SunIcon,
+} from "@phosphor-icons/react";
+import { createFileRoute, Link, Outlet, redirect, useLocation, useMatchRoute, useRouter } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef } from "react";
 
 import { fetchCurrentUserQueryOptions, useCurrentUser } from "../api/auth/current-user";

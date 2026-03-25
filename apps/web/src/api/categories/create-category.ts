@@ -35,7 +35,7 @@ export function useCreateCategory() {
         order: previousData?.categories.length ?? 0,
         dateCreated: now,
         dateUpdated: now,
-        taskCount: 0,
+        itemCount: 0,
       };
 
       queryClient.setQueryData<CategoryListResponse>(categoriesQueryKey, (old) => {
@@ -51,7 +51,7 @@ export function useCreateCategory() {
         if (!old) return old;
         return {
           categories: old.categories.map((cat) =>
-            cat.id === context.optimisticId ? { ...response.category, taskCount: 0 } : cat,
+            cat.id === context.optimisticId ? { ...response.category, itemCount: 0 } : cat,
           ),
         };
       });

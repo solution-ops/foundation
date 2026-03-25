@@ -1,5 +1,5 @@
-import { TrashIcon } from "@phosphor-icons/react";
 import { Button } from "@foundation/ui/components/button";
+import { TrashIcon } from "@phosphor-icons/react";
 
 import { useListItems } from "../../api/items/list-items";
 import { TrashRow } from "./trash-row";

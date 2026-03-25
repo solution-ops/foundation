@@ -1,17 +1,10 @@
-import type { Icon } from "@phosphor-icons/react";
-import {
-  GlobeIcon,
-  KeyboardIcon,
-  LockIcon,
-  PaletteIcon,
-  StackIcon,
-  WrenchIcon,
-} from "@phosphor-icons/react";
-import { createFileRoute, Link } from "@tanstack/react-router";
 import { appConfig } from "@foundation/constants/app-config";
 import { Button } from "@foundation/ui/components/button";
 import { ThemeToggle } from "@foundation/ui/components/theme-toggle";
 import { LogoIcon } from "@foundation/ui/icons/logo";
+import type { Icon } from "@phosphor-icons/react";
+import { GlobeIcon, KeyboardIcon, LockIcon, PaletteIcon, StackIcon, WrenchIcon } from "@phosphor-icons/react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({
   component: Index,

@@ -1,8 +1,8 @@
 import { useSortable } from "@dnd-kit/react/sortable";
-import { DotsSixVerticalIcon } from "@phosphor-icons/react";
-import { Link } from "@tanstack/react-router";
 import { SidebarMenuBadge, SidebarMenuButton, SidebarMenuItem } from "@foundation/ui/components/sidebar";
 import { cn } from "@foundation/ui/utils/cn";
+import { DotsSixVerticalIcon } from "@phosphor-icons/react";
+import { Link } from "@tanstack/react-router";
 import type { CategoryItem } from "../../api/categories/list-categories";
 import type { CategoryColor } from "../../types/categories";
 import { CategoryColorDot } from "./category-color-dot";
@@ -54,7 +54,7 @@ export function SortableCategoryItem({
             <CategoryColorDot color={category.color as CategoryColor} />
             <span>{category.name}</span>
           </SidebarMenuButton>
-          {category.taskCount > 0 && <SidebarMenuBadge className="right-8">{category.taskCount}</SidebarMenuBadge>}
+          {category.itemCount > 0 && <SidebarMenuBadge className="right-8">{category.itemCount}</SidebarMenuBadge>}
           <CategoryItemActions category={category} onRename={onRename} onDelete={onDelete} />
         </>
       )}

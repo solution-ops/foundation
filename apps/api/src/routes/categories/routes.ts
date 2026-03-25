@@ -1,4 +1,3 @@
-import { createRoute } from "@hono/zod-openapi";
 import {
   categoryDeleteResponseSchema,
   categoryIdParamSchema,
@@ -8,6 +7,7 @@ import {
   reorderCategoriesSchema,
   updateCategorySchema,
 } from "@foundation/types/schemas/categories";
+import { createRoute } from "@hono/zod-openapi";
 import {
   conflictResponse,
   jsonContent,

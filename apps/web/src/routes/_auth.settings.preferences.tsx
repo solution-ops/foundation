@@ -1,7 +1,7 @@
-import { DesktopIcon, MoonIcon, SunIcon } from "@phosphor-icons/react";
-import { createFileRoute } from "@tanstack/react-router";
 import { ToggleGroup, ToggleGroupItem } from "@foundation/ui/components/toggle-group";
 import { useTheme } from "@foundation/ui/hooks/use-theme";
+import { DesktopIcon, MoonIcon, SunIcon } from "@phosphor-icons/react";
+import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_auth/settings/preferences")({
   component: PreferencesPage,

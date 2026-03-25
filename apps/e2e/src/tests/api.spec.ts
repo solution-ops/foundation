@@ -1,5 +1,5 @@
-import { expect, test } from "@playwright/test";
 import { appConfig } from "@foundation/constants/app-config";
+import { expect, test } from "@playwright/test";
 
 test.describe
   .skip("API Integration", () => {

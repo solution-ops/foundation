@@ -1,5 +1,3 @@
-import { GearSixIcon, ListChecksIcon, PlusIcon, TrashIcon } from "@phosphor-icons/react";
-import { useNavigate } from "@tanstack/react-router";
 import {
   CommandDialog,
   CommandEmpty,
@@ -9,7 +7,9 @@ import {
   CommandList,
   CommandShortcut,
 } from "@foundation/ui/components/command";
-import { triggerNewTask } from "../hooks/use-quick-actions";
+import { GearSixIcon, ListChecksIcon, PlusIcon, TrashIcon } from "@phosphor-icons/react";
+import { useNavigate } from "@tanstack/react-router";
+import { triggerNewItem } from "../hooks/use-quick-actions";
 
 type CommandPaletteProps = {
   open: boolean;
@@ -30,9 +30,9 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
         <CommandGroup heading="Actions">
-          <CommandItem onSelect={() => runCommand(triggerNewTask)}>
+          <CommandItem onSelect={() => runCommand(triggerNewItem)}>
             <PlusIcon className="size-4" />
-            <span>New Task</span>
+            <span>New Item</span>
           </CommandItem>
         </CommandGroup>
         <CommandGroup heading="Navigation">
